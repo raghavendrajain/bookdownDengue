@@ -1,0 +1,695 @@
+
+## Interaction of Meteorological Variables
+
+```{r CombingingPredictors, echo= FALSE, message= FALSE, results="hide"}
+
+library(reshape)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+
+## We Start with taking the large df of DHF incidents. 
+
+head(DHF_dist_2008.2015)
+names(DHF_dist_2008.2015) # "geocode_district" "date_sick_year"   "date_sick_month"  "count" 
+
+# We add the DTR and rainfall data in the same dataframe.  
+# Both these data are same for all districts. They vary only according to the year and month. 
+
+#Ordering the dataframe according to the month.
+DHF_dist_2008.2015 <- DHF_dist_2008.2015[order(DHF_dist_2008.2015$date_sick_month), ] 
+
+#    geocode_district date_sick_year date_sick_month count
+# 55              1001           2008               1     6
+# 77              1001           2009               1     1
+# 99              1001           2010               1    12
+# 120             1001           2011               1     4
+# 141             1001           2012               1     1
+# 162             1001           2013               1    35
+
+# To match with the above dataframe, I will replace the month names to integers from 1 to 12
+AverageDTRInBangkok_2008.2015$Month <- c(1:12)
+AverageRainInBangkok_2008.2015$Month <- c(1:12)
+
+## Now melting the DTR and rainfall dataframes
+
+meltDTR <- melt(AverageDTRInBangkok_2008.2015, id.vars = "Month")
+names(meltDTR) <- c("date_sick_month", "date_sick_year", "DTR")
+
+meltRainfall <- melt(AverageRainInBangkok_2008.2015, id.vars = "Month")
+names(meltRainfall) <- c("date_sick_month", "date_sick_year", "Rainfall")
+
+## Climate variables are merged together for all years and months
+climateTotal <- merge(meltDTR, meltRainfall)
+
+```
+
+```{r Climate1, fig.cap= 'The temperature and rainfall data rogether acroos several years', fig.align='center', echo=FALSE}
+
+ggplot(climateTotal, aes(x = Rainfall, y = DTR, color )) + geom_point(size=1.5)  + ggtitle("Interaction of Climate Variables (2008-2015)") + labs(x="Rainfall (mm)",y="Diurnal Temperature Range") + facet_grid( date_sick_year ~ date_sick_month ) 
+
+
+```
+
+
+```{r Climate2, fig.cap= ' The temperature and rainfall data rogether in the same plot.', fig.align='center', echo=FALSE}
+
+ggplot(climateTotal, aes(x = Rainfall, y = DTR, group = date_sick_year, color = date_sick_year)) + geom_point(size=1.5)  + ggtitle("Interaction of Climate Variables (2008-2015)") + labs(x="Rainfall (mm)",y="Diurnal Temperature Range") + facet_grid( . ~ date_sick_month ) 
+```
+
+
+<!-- In this chunk, I will deal with the garbage data -->
+
+
+```{r echo=FALSE, results="hide", include=FALSE}
+
+library(matrixStats)
+
+
+
+district_garbage <- subset(district_garbage_data, select = -c(district_name,AMP_ID, Gabage.Per.day.2012, Gabage.Per.day.2013, Gabage.Per.day.2014 ))
+  
+avgMonGarbage <- rowMeans(district_garbage[, c(2,3,4)])/12
+stDMonGarbage <- apply(district_garbage[,-1], 1, sd)/12
+
+district_garbage  <- subset(district_garbage , select = -c(Total.Gagbage.2012, Total.Gagbage.2013, Total.Gagbage.2014))
+district_garbage <- cbind(district_garbage,avgMonGarbage, stDMonGarbage)
+
+## ordering the data frame according to district names
+
+district_garbage <- district_garbage[order(district_garbage$geocode_district),]
+
+
+dist_gb_col <- data.frame()
+
+for (i in 1:50){
+  
+  garbage <- rnorm(96, mean =  district_garbage[i,2], sd = district_garbage[i,3])
+  distCollection <- cbind(rep(1000 + i,96), garbage)
+  dist_gb_col <- rbind(dist_gb_col, distCollection )
+}
+
+colnames(dist_gb_col) <- c("geocode_district", "garbage")
+dist_gb_col$geocode_district <- as.integer(dist_gb_col$geocode_district)
+class(dist_gb_col$geocode_district)
+
+```
+
+
+```{r echo=FALSE, results="hide"}
+
+## Merging climate variables with DHF data
+total <- merge(DHF_dist_2008.2015, climateTotal) 
+district_population
+names(district_population)
+
+total <- merge(total, district_population, by= "geocode_district") 
+
+any(is.na(total))
+
+
+# Sum of the neighbors of each district
+
+neighbors<- apply(connected_district_code[,-1],1, sum)
+
+# The following df lists the names of district and their neighbors
+dist_neighbor <- cbind(data.frame(connected_district_code$geocode_district), data.frame(neighbors))
+names(dist_neighbor) <- c("geocode_district", "neighbors")
+
+total <- merge(total, dist_neighbor, by= "geocode_district") 
+
+names(total)
+```
+
+
+```{r totalDataSaved, echo=FALSE, results="hide"}
+entireData <- total
+#View(entireData)
+orderedEntireData <-entireData[order(entireData$date_sick_year, entireData$date_sick_month), ]
+
+# The dataset consists of following entries:
+#
+# 1. Information of each district
+#     + identification codes
+#     + name of the district.
+#     + population (divided into various age bins)
+#     + area in square kms.
+#     + Number of communities
+#     + number of neighboring districts
+# 2. Monthly DHF count in each district from 2008~2015
+# 3. Monthly average rainfall in Bangkok from 2008~2015
+# 4. Monthly Diurnal Temperature Range (DTR) in Bangkok from 2008~2015
+
+```
+
+```{r closeToStream, echo=FALSE, results="hide"}
+
+dist_on_stream <- NULL
+dist_cl_stream <- c(29,2,25,1,20,16,15,18,8,13,4,28,31,12,24,33,9,47)
+for (i in dist_cl_stream){
+  code = 1000 + i
+  name <- subset(orderedEntireData, geocode_district ==  code)$district_name[1] 
+  #print (as.character(name), quote = FALSE)
+  dist_on_stream  <- c(dist_on_stream, as.character(name))
+  #cat(as.character(name), ",")
+  
+}
+
+```
+
+
+There are `r length(dist_on_stream)` districts that are close to stream as shown in Figure \@ref(fig:bkk-map). Their names are:
+
+```{r Stream, echo=FALSE, comment=NA}
+print (dist_on_stream)
+
+```
+
+
+```{r TidyingDataset, echo=FALSE, results="hide", message=FALSE}
+
+## This chunk creates implicit missing data into explicit missing data. 
+
+library(reshape)
+library(tidyr)
+
+orderedEntireData <- orderedEntireData %>%  group_by(geocode_district,date_sick_year, district_name,
+                            population_1..From.DDC.Source., 
+                            Community, area_km2, population_2..From.Bangkok.stat., Age...35, Age..35, X0.4, 
+                            X5.9, X10.14, X15.19, X20.24,
+                            X25.29, X30.34, X35.39, X40.44, X45.49, X50.54, X55.59, X60.64, X65.69, X70.74, X75.79, X80.84, X85.89, X90.94, X95.99, X..100, neighbors) %>% complete(date_sick_month = 1:12)
+
+
+orderedEntireData$district_name.y <- NULL
+orderedEntireData$AMP_ID <- NULL
+orderedEntireData$time <- rep(1:96, 50) #Time variable is input as additional column
+
+orderedEntireData <- as.data.frame(orderedEntireData)
+
+```
+
+```{r echo=FALSE, results="hide"}
+garbage <- dist_gb_col$garbage
+## Attaching the district garbage data with the entire dataset
+orderedEntireData  <- cbind(orderedEntireData, garbage )
+## Attaching the status (binary) based on whether districts are close to stream or not. 
+
+index <- dist_cl_stream + 1000
+nextToStream <- orderedEntireData$geocode_district %in% index
+orderedEntireData  <- cbind(orderedEntireData, nextToStream)
+
+## Now we know which district is next to a river stream and which are simply NOT
+
+```
+
+```{r, results="hide", echo=FALSE}
+
+## The dataset that has all the required values is "orderedEntireData""
+
+#orderedEntireData
+
+## Finding out which of the columns in that dataframe have missing values
+
+colnames(orderedEntireData)[colSums(is.na(orderedEntireData)) > 0]
+
+#The result is
+#[1] "count"    "DTR"      "Rainfall"
+## Thus we need to fill the data using predictive mean matching
+
+```
+
+
+```{r}
+
+## In the dataset, for some of the 50 districts, we don't have the data for DTR and rainfall.
+## However, since the entire Bangkok have the same DTR and rainfall, we will use that data to replace NA from DTR and Rainfall data. 
+
+##  The data is of 8 years i.e. 96 entries. 
+
+y <- complete.cases(orderedEntireData) # take the completed cases
+index_NA <- which(!y)   # index on rows with NAs
+
+# time at which NA values were reported
+timePoint <- subset(orderedEntireData[index_NA,], select = c("date_sick_year", "date_sick_month" ) )
+# decomposing into years and months
+
+year<- as.character(timePoint$date_sick_year)
+month<- timePoint$date_sick_month
+
+# storing them in a dataframe
+rain_df <- NULL
+temp_df <- NULL
+
+for (i in 1:length(month)){
+  rain_df[i] <- AverageRainInBangkok_2008.2015[month[i], year[i]]
+  temp_df[i] <- AverageDTRInBangkok_2008.2015[month[i], year[i]]
+}
+
+## putting them into the dataset
+
+orderedEntireData[index_NA, "DTR"] <- temp_df
+orderedEntireData[index_NA, "Rainfall"] <- rain_df
+
+## Now the only column with missing values is "count"
+
+```
+
+
+
+
+```{r ImputeSimulation_locf, echo=FALSE, results="hide"}
+
+## I wanted to use preditive mean matching for the imputation. 
+# However, some of the imputed values were negative for the countd data, which is unacceptable. The online help suggested that this could be because the data was not normally distribited, so they suggested me to take the log of the data. I did test that and found that taking log, did help normalize my data. 
+# However, I used another technique called "locf", which simply imputes the value of last month of the same year. 
+
+require(forecast)
+
+DHF_data <- list()
+distChunk <- list()
+d <- list()
+tsa <- list()
+
+for (i in 1:50){
+  distChunk[[i]] <- subset(orderedEntireData, geocode_district == 1000 + i )
+  DHF_data[[i]] <- distChunk[[i]]$count
+  tsa[[i]] <-ts(DHF_data[[i]],start=c(2008,1),end=c(2015,12),frequency=12)
+  tsa[[i]]<- na.locf(tsa[[i]])
+  tsa[[i]] <- as.vector(tsa[[i]])
+}
+
+## combining the list of dataframes
+
+completeCounts <- ldply(tsa, data.frame)
+
+orderedEntireData_withoutNA <- orderedEntireData
+orderedEntireData_withoutNA$count <- completeCounts[,1]
+
+## The dataframe "completedEntData" has all the count data i.e. NO missing values.
+
+```
+
+
+
+```{r surDistData, echo=FALSE, results="hide", message=FALSE}
+
+## Exploring the connected districts
+
+View(connected_district_code)
+
+temp <- subset(connected_district_code, select = - geocode_district)
+list_neigh<- apply(temp, 1, function(i) which(i %in% "1"))
+
+## In the row of a particular district, I want to add the dengue incidence counts from its nearby districts that occur at the same time.
+
+N <- length(list_neigh)
+allDistrictData <- list()
+
+
+dist_n <- list()
+list_distData <- list()
+neighborsDf <- NA
+
+
+for (i in 1:N){
+  distCode <- 1000 + i
+  p <- subset(orderedEntireData, geocode_district ==    distCode)
+  dist_n <- list_neigh[i][[1]] # taking only data, not index $`i`
+  print (dist_n)
+  
+  #neighborsDf <- data.frame()
+  for (j in 1:length(dist_n)){
+    l <- length(dist_n)
+    neighCode <- 1000 + dist_n[j]
+    print (neighCode)
+    if (dist_n[j] %in% dist_cl_stream) ## If the neighbor is next to stream
+    {
+       name <- paste0("neighCountNextStream", j )
+    }
+    else
+    {
+       name <- paste0("neighCount", j ) ## otherwise keep the name normal
+    }
+    ## name <- paste0("neighCountNextStrea", j )
+    p[name]<- subset(orderedEntireData, geocode_district == neighCode)$count
+  }
+  
+  print (p)
+  neighborColIndex <- grep("neighCount", colnames(p))
+  p$totalSurroundingDengue <- rowSums(p[, c(neighborColIndex) ], na.rm = TRUE)
+  p$neigNextToStream <- sum(dist_n %in% dist_cl_stream, na.rm = TRUE)
+  allDistrictData[[i]] <- p
+}
+
+
+## Now I have the data frame with all neighbor information, nearby dengue counts. 
+
+
+
+## Also, i will need to create lagged values for all the district dengue data.
+## checkout the dynamic lag-linear models when dengue data is imputed. Also see whether they have restropective influence.
+
+
+```
+
+```{r everything, echo=FALSE, results="hide"}
+## The following data frame contains everything. 
+
+WholeData <- ldply(allDistrictData, data.frame)
+
+## Creating a df with no left value in count data
+WholeData_withoutNA <- WholeData
+WholeData_withoutNA$count <- completeCounts[,1]
+# sapply(WholeData, function(x) sum(is.na(x)))
+
+```
+
+```{r echo=FALSE, resuls="hide", message=FALSE}
+
+## Here I created the lagged values for the entire dataset 
+## The Algo is:
+# 1. Take data into the list, divide the data into dataframes.
+# 2. Create the lags. Add them as columns names as I did previously.
+# 3. Add all the dataframes into the lists. 
+
+allDistrictLaggedData <- list()
+
+for (i in 1:50) {
+  distCode <- 1000 + i
+  p <- subset(WholeData, geocode_district ==  distCode)
+  N <- nrow(p)
+ 
+  
+  # putting the DHF count data into a vector so that we can tak lags
+  countVec <- as.vector(p$count)
+  # Lag 0 dengue count variable
+  p$count0 <- countVec
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  #totally we need to take the lag of 5 years i.e. 60 months
+  
+  #totally we need to take the lag of 5 years i.e. 60 months
+
+  countLag <- 1
+  
+  for (j in 1:60){
+    #print (j);
+    l <- N-j;
+    countLag[j] <- paste0("count",j)
+    laggedCountVec <- c(rep(NA,j), countVec[1:l]) 
+    p <- cbind(p, laggedCountVec)
+  }
+
+  # creating dengue lag variables for 60 momnths 
+  colnames(p) <- c(temp, countLag)
+  
+  
+## Creating Lag Variables for total surrounding dengue 
+  
+  
+  # putting the DHF count data into a vector so that we can tak lags
+  surroundingCountVec <- as.vector(p$totalSurroundingDengue)
+  # Lag 0 dengue count variable
+  p$surroundingCountVec0 <- surroundingCountVec
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  #totally we need to take the lag of 5 years i.e. 60 months
+  
+  #totally we need to take the lag of 5 years i.e. 60 months
+
+  countLag <- 1
+  
+  for (j in 1:60){
+    #print (j);
+    l <- N-j;
+    countLag[j] <- paste0("surroundingCountVec",j)
+    laggedCountVec <- c(rep(NA,j), surroundingCountVec[1:l]) 
+    p <- cbind(p, laggedCountVec)
+  }
+
+  # creating dengue lag variables for 60 momnths 
+  colnames(p) <- c(temp, countLag)
+  
+  
+  
+## Now creating lag variables for DTR
+  
+  
+  temperatureVec <- as.vector(p$DTR)
+  p$templ0 <- temperatureVec
+  temp <- colnames(p)  
+  
+  tempLag <- 1
+  for (j in 1:4){
+    #print (j);
+    l <- N-j;
+    tempLag[j] <- paste0("templ",j)
+    laggedDTR <- c(rep(NA,j), temperatureVec[1:l]) 
+    p <- cbind(p, laggedDTR)
+  }
+
+
+  # creating temperature lag variables for last 4 momnths 
+  colnames(p) <- c(temp, tempLag)
+  
+## Now creating lag variables for Rainfall
+  
+  # putting the Rainfall into a vector so that we can take lags
+  RainFallVec <- as.vector(p$Rainfall)
+  # Lag 0 dengue count variable
+  p$rainl0 <- RainFallVec
+  
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+
+## Now creating lag variables for Rainfall
+
+  # putting the Rainfall into a vector so that we can take lags
+  RainFallVec <- as.vector(p$Rainfall)
+  # Lag 0 dengue count variable
+  p$rainl0 <- RainFallVec
+  
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  
+  RainLag <- 1
+  for (j in 1:4){
+    #print (j);
+    l <- N-j;
+    RainLag[j] <- paste0("rainl",j)
+    laggedRainVec <- c(rep(NA,j), RainFallVec[1:l]) 
+    p <- cbind(p, laggedRainVec)
+  }
+  
+  
+  # creating rainfall lag variables for 60 momnths 
+  colnames(p) <- c(temp, RainLag)
+  
+  allDistrictLaggedData[[i]] <- p
+  
+  }
+
+WholeDataLagged <- ldply(allDistrictLaggedData, data.frame)
+# sapply(WholeDataLagged , function(x) sum(is.na(x)))
+
+```
+
+
+
+```{r echo=FALSE, resuls="hide", message=FALSE}
+
+## Here I created the lagged values for the entire dataset 
+## The Algo is:
+# 1. Take data into the list, divide the data into dataframes.
+# 2. Create the lags. Add them as columns names as I did previously.
+# 3. Add all the dataframes into the lists. 
+
+allDistrictLaggedData_withoutNA <- list()
+
+for (i in 1:50) {
+  distCode <- 1000 + i
+  p <- subset(WholeData_withoutNA, geocode_district ==  distCode)
+  N <- nrow(p)
+ 
+  
+  # putting the DHF count data into a vector so that we can tak lags
+  countVec <- as.vector(p$count)
+  # Lag 0 dengue count variable
+  p$count0 <- countVec
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  #totally we need to take the lag of 5 years i.e. 60 months
+  
+  #totally we need to take the lag of 5 years i.e. 60 months
+
+  countLag <- 1
+  
+  for (j in 1:60){
+    #print (j);
+    l <- N-j;
+    countLag[j] <- paste0("count",j)
+    laggedCountVec <- c(rep(NA,j), countVec[1:l]) 
+    p <- cbind(p, laggedCountVec)
+  }
+
+  # creating dengue lag variables for 60 momnths 
+  colnames(p) <- c(temp, countLag)
+  
+  
+## Creating Lag Variables for total surrounding dengue 
+  
+  
+  # putting the DHF count data into a vector so that we can tak lags
+  surroundingCountVec <- as.vector(p$totalSurroundingDengue)
+  # Lag 0 dengue count variable
+  p$surroundingCountVec0 <- surroundingCountVec
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  #totally we need to take the lag of 5 years i.e. 60 months
+  
+  #totally we need to take the lag of 5 years i.e. 60 months
+
+  countLag <- 1
+  
+  for (j in 1:60){
+    #print (j);
+    l <- N-j;
+    countLag[j] <- paste0("surroundingCountVec",j)
+    laggedCountVec <- c(rep(NA,j), surroundingCountVec[1:l]) 
+    p <- cbind(p, laggedCountVec)
+  }
+
+  # creating dengue lag variables for 60 momnths 
+  colnames(p) <- c(temp, countLag)
+  
+  
+  
+## Now creating lag variables for DTR
+  
+  
+  temperatureVec <- as.vector(p$DTR)
+  p$templ0 <- temperatureVec
+  temp <- colnames(p)  
+  
+  tempLag <- 1
+  for (j in 1:4){
+    #print (j);
+    l <- N-j;
+    tempLag[j] <- paste0("templ",j)
+    laggedDTR <- c(rep(NA,j), temperatureVec[1:l]) 
+    p <- cbind(p, laggedDTR)
+  }
+
+
+  # creating temperature lag variables for last 4 momnths 
+  colnames(p) <- c(temp, tempLag)
+  
+## Now creating lag variables for Rainfall
+  
+  # putting the Rainfall into a vector so that we can take lags
+  RainFallVec <- as.vector(p$Rainfall)
+  # Lag 0 dengue count variable
+  p$rainl0 <- RainFallVec
+  
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+
+## Now creating lag variables for Rainfall
+
+  # putting the Rainfall into a vector so that we can take lags
+  RainFallVec <- as.vector(p$Rainfall)
+  # Lag 0 dengue count variable
+  p$rainl0 <- RainFallVec
+  
+  # to append lag variable names, I put the existing names into a column vector
+  temp <-colnames(p)
+  
+  RainLag <- 1
+  for (j in 1:4){
+    #print (j);
+    l <- N-j;
+    RainLag[j] <- paste0("rainl",j)
+    laggedRainVec <- c(rep(NA,j), RainFallVec[1:l]) 
+    p <- cbind(p, laggedRainVec)
+  }
+  
+  
+  # creating rainfall lag variables for 60 momnths 
+  colnames(p) <- c(temp, RainLag)
+  
+  allDistrictLaggedData_withoutNA[[i]] <- p
+  
+  }
+
+WholeDataLagged_withoutNA <- ldply(allDistrictLaggedData_withoutNA, data.frame)
+# sapply(WholeDataLagged , function(x) sum(is.na(x)))
+
+```
+
+
+
+```{r TrainingData_GAM, echo=FALSE, results="hide"}
+
+## The entire training data is shown here
+
+training2008_2012 <- subset(WholeDataLagged, date_sick_year < 2013)
+training2008_2013 <- subset(WholeDataLagged, date_sick_year < 2014)
+training2008_2014 <- subset(WholeDataLagged, date_sick_year < 2015)
+
+## The month wise training data is
+
+trainTill2012 <- list()
+trainTill2013 <- list()
+trainTill2014 <- list()
+
+for (i in 1:50)
+  {
+  distCode <- 1000 + i
+  p <- subset(WholeDataLagged, geocode_district ==    distCode)
+  trainTill2012[[i]] <-  subset(WholeDataLagged, (geocode_district == distCode) & (date_sick_year < 2013))
+  trainTill2013[[i]] <-  subset(WholeDataLagged, (geocode_district == distCode) & (date_sick_year < 2014))
+  trainTill2014[[i]] <-  subset(WholeDataLagged, (geocode_district == distCode) & (date_sick_year < 2015))
+}
+
+trainTill2012_df <- ldply(trainTill2012, data.frame)
+trainTill2013_df <- ldply(trainTill2013, data.frame)
+trainTill2014_df <- ldply(trainTill2014, data.frame)
+
+```
+
+
+
+
+```{r TrainingData_GAM_noNA, echo=FALSE, results="hide"}
+
+## The entire training data is shown here
+
+training2008_2012_noNA <- subset(WholeDataLagged_withoutNA, date_sick_year < 2013)
+training2008_2013_noNA <- subset(WholeDataLagged_withoutNA, date_sick_year < 2014)
+training2008_2014_noNA <- subset(WholeDataLagged_withoutNA, date_sick_year < 2015)
+
+## The month wise training data is
+
+trainTill2012_noNA <- list()
+trainTill2013_noNA <- list()
+trainTill2014_noNA <- list()
+
+for (i in 1:50)
+  {
+  distCode <- 1000 + i
+  p <- subset(WholeDataLagged_withoutNA, geocode_district ==    distCode)
+  trainTill2012_noNA[[i]] <-  subset(WholeDataLagged_withoutNA, (geocode_district == distCode) & (date_sick_year < 2013))
+  trainTill2013_noNA[[i]] <-  subset(WholeDataLagged_withoutNA, (geocode_district == distCode) & (date_sick_year < 2014))
+  trainTill2014_noNA[[i]] <-  subset(WholeDataLagged_withoutNA, (geocode_district == distCode) & (date_sick_year < 2015))
+}
+
+trainTill2012_noNA_df <- ldply(trainTill2012_noNA, data.frame)
+trainTill2013_noNA_df <- ldply(trainTill2013_noNA, data.frame)
+trainTill2014_noNA_df <- ldply(trainTill2014_noNA, data.frame)
+
+```
+
+
+
+
+

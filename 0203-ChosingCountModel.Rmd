@@ -1,0 +1,21 @@
+<!-- Choice of model.  -->
+
+<!-- I want to check which model is better for moeling the dengue count data, whether it is Poisson, Quasi-Poisson, Negative-Binomial or Zero-Inflated Negative Binomial.  -->
+
+```{r CountModel, echo=FALSE, results="hide"}
+
+## We take the "Whole Lagged Data" data.frame and the list allDistrictLaggedData
+
+countMean <- mean(WholeDataLagged$count, na.rm = TRUE)
+countVar <- sd(WholeDataLagged$count, na.rm = TRUE)
+countMean 
+countVar
+## The mean and variance are same.  
+
+# 
+# Not all the count data, meets the assumptions of the Poisson distribution. Thus, we need to test if the variance>mean or if the number of zeros is greater than expected
+
+
+
+```
+

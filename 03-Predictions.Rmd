@@ -1,0 +1,11 @@
+# Prediction Using GAM 
+
+<!-- I use the following models for making predictions. -->
+
+<!-- 1. Seasonal ARIMA -->
+<!-- 2. Dynamic Regressions Models -->
+<!-- 3. Bayesian Network -->
+<!-- 4. Bayesian Structural Time Series Model -->
+<!-- 5. Generalized Additive (Mixed) Models. -->
+
+

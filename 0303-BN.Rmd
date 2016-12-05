@@ -1,0 +1,123 @@
+## Bayesian Network
+
+```{r HybridBayesianNet, echo=FALSE, results='hide', message=FALSE}
+
+### This chunk divides the data into training dataset and testing datasent based on the datacolumns and the pivot year name.
+
+names(WholeDataLagged_withoutNA)
+
+classChange <-  function(df) {
+  
+  df$geocode_district <- as.factor(df$geocode_district)
+  df$date_sick_year   <- factor(df$date_sick_year, levels = 2008:2015, ordered = TRUE)
+  df$date_sick_month  <- factor(df$date_sick_month, levels = 1:12, ordered = TRUE)
+  df$count            <- as.numeric(df$count)
+  
+  names(df)[names(df) == 'date_sick_month'] <- 'Month'
+  names(df)[names(df) == 'date_sick_year'] <- 'Year'
+  
+  df
+}
+
+### The class change is done to ensure:
+## 1. They are compatible with the requirements of bnlearn package
+bayesianDF <- classChange(WholeDataLagged_withoutNA)
+
+## subseting the dataframe based on columns and the pivot year
+
+dataDivision <- function(df, dataColumns, year) {
+   new <- list()
+   train <- subset(df, select = dataColumns , Year <= year)
+   test <-  subset(df, select = dataColumns, Year > year)
+   new[[1]] <- train
+   new[[2]] <- test
+   new
+}
+
+dataColumns <- c("geocode_district", "Year", "Month", "count", "DTR", "Rainfall")
+
+bayesianList <- dataDivision(bayesianDF, dataColumns, 2012 )
+bayesianDF.train <- bayesianList[[1]]
+bayesianDF.test  <- bayesianList[[2]]
+
+```
+
+```{r results="hide", echo= FALSE, message=FALSE}
+
+#import the library 
+
+library(bnlearn)
+
+#Creating the dependencies in dag for bn. 
+## Root nodes are created first. Then their dependecies are listed. 
+dag<-model2network("[Year][Month][geocode_district][DTR|Month:Year][Rainfall|Month:Year] [count|DTR:Rainfall:geocode_district]")
+
+# plot the dag
+graphviz.plot(dag)
+
+## fit the parameters
+fit_1<- bn.fit(dag, data = bayesianDF.train)
+
+pred_test = predict(fit_1, "count", bayesianDF.test)  # predicts the value of node count given test set
+pred_train = predict(fit_1, "count", bayesianDF.train)
+
+#cbind(pred, bayesianDF.test[, "count"])  
+
+trainCount <- bayesianDF.train[, "count"]
+testCount <- bayesianDF.test[, "count"]
+
+
+```
+
+The accuracy of the prediction using Bayesian Network:
+
+```{r BNAccuracy_1, echo=FALSE }
+
+accuracy(f = pred_test, x =  testCount)
+
+```
+
+
+
+The in-sample error is
+
+```{r}
+
+a <- sqrt(mean((trainCount-pred_train)^2))/sqrt(mean((trainCount)^2))
+
+#for validation data 2013-2015
+c <- sqrt(mean((testCount-pred_test)^2))/sqrt(mean((testCount)^2))
+
+
+```
+
+The out-sample error for validation data 2013-2015 is
+
+```{r}
+#for validation data 2013-2015
+c <- sqrt(mean((testCount-pred_test)^2))/sqrt(mean((testCount)^2))
+
+```
+
+The mean absolute percentage error:
+
+
+```{r}
+
+mape <- function(y, yhat){
+  mean(abs((y - yhat)/y), na.rm=T) * 100
+}
+
+mpe <- function(y, yhat){
+  mean((y - yhat)/y, na.rm=T) * 100
+}
+
+
+mape(testCount, pred_test)
+mpe(testCount, pred_test)
+
+```
+
+
+
+

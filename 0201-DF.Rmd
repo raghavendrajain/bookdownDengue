@@ -1,0 +1,27 @@
+<!-- This chunk contains the information about all the data imported in the   --> 
+
+```{r ListOfdfs, echo= FALSE, message= FALSE, results="hide" }
+
+library(reshape)
+
+## This makes the list of dataframes for each district
+
+DHF_dist_2008.2015 <- subset(DHF_bangkok_district_level_2008.2015, select = - c(disease_code ))
+length(unique(DHF_dist_2008.2015$geocode_district))
+
+listofdfs <- list()
+totalDHFdfs <- list()
+meltdfs <- list()
+df_DHFs <- list()
+
+for (i in 1000:1050)
+{
+  listofdfs[[i]] <- subset(DHF_dist_2008.2015, geocode_district == i  )
+  totalDHFdfs[[i]] <- aggregate(count ~ date_sick_year + date_sick_month, listofdfs[[i]], sum)
+  meltdfs[[i]] <- melt(totalDHFdfs[[i]], id.vars = c("date_sick_month", "date_sick_year"))
+  df_DHFs[[i]] <- cast( meltdfs[[i]], date_sick_month ~ date_sick_year )
+  
+}
+```
+
+

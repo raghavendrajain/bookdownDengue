@@ -1,0 +1,61 @@
+# Introduction {#intro}
+
+<!-- ## Purpose of the Research (Outline)  -->
+
+<!-- Epidemics of communicable diseases place a huge burden on public health infrastructures -->
+<!-- across the world. Producing accurate and actionable forecasts of infectious disease incidence -->
+<!-- at short and long time scales will improve public health response to outbreaks. However, -->
+<!-- scientists and public health officials face many obstacles in trying to create such realtime -->
+<!-- forecasts of infectious disease incidence. -->
+
+<!-- The communicable diseases have been a significant cause of death and hospitalization across the world.   -->
+
+<!-- Dengue, a mosquito borne viral disease, infects 400 milion people worldwide and has been a significant cause of death and hospitalization. To enable public health experts prepare for, manage and control the epidemic, we create early warning system of dengue outbreaks. I deveolop a machine learning-based methodology capable of providing real-time (“nowcast”) and forecast estimates of dengue prediction in each of the fifty districts of Thailand by leveraging data from multiple data sources. Using a set of prediction variables I show an increas in prediction accuracy of the model with an optimal combination of predictors which include: meteorological data, clinical data, lag variables of disease surveillance, socio-economic data and the data  encoding spatial dependence on dengue transmission. -->
+
+<!-- actionable forecasts -->
+
+
+<!-- Despite this, the surveillance for diagnosing dengue has been limited which makes it difficult to generate detailed information on its epidemiology. -->
+<!--    Therefore, the goal of this research is to create a system that can acquire detailed relevant information and use it to predict the occurrence of dengue within a geographical region, so that public health experts can prepare for, manage and control the epidemic.   -->
+
+
+
+
+
+<!-- Dengue is a mosquito-borne virus that annually -->
+<!-- infects over 400 million people worldwide. We developed a real-time forecasting model -->
+<!-- for dengue hemorrhagic fever in the 77 provinces of Thailand. We created a practical -->
+<!-- computational infrastructure that generated multi-step predictions of dengue incidence in -->
+<!-- Thai provinces every two weeks throughout 2014. These predictions show mixed performance -->
+<!-- across provinces, out-performing seasonal baseline models in over half of provinces -->
+<!-- at a 1.5 month horizon. Additionally, to assess the degree to which delays in case reporting -->
+<!-- make long-range prediction a challenging task, we compared the performance of our realtime -->
+<!-- predictions with predictions made with fully reported data. This paper provides valuable -->
+<!-- lessons for the implementation of real-time predictions in the context of public health decision -->
+<!-- making. -->
+
+
+
+
+<!-- Dengue, a mosquito borne viral disease, infects 400 million people worldwide and has been a significant cause of death and hospitalization. To enable public health experts, prepare for, manage and control the epidemic, I create an early warning system of dengue outbreaks. I develop a machine learning-based methodology capable of providing spatially and temporally accurate real-time (“nowcast”) and forecast estimates of dengue prediction in each of the fifty districts of Thailand by leveraging data from multiple data sources. Additionally, to collect high-resolution data about the relevant environmental factors, at frequent time intervals, I use unmanned aerial vehicles (UAVs) instead of the satellite data.  -->
+
+
+
+
+<!-- To address issues of delay with satellite imagery or reliability with social media, we use unmanned aerial vehicles (UAVs) to collect spatially and temporally accurate, and reliable, data about environmental factors that influence disease transmission.  -->
+
+
+
+
+## Abstract {#abstract}
+
+To create early warning system of dengue outbreaks, we present a machine learning-based methodology capable of providing real-time (“nowcast”) and forecast estimates of dengue prediction in each of the fifty districts of Thailand by leveraging data from multiple data sources. Using a set of prediction variables we show an increasing prediction accuracy of the model with an optimal combination of predictors which include: meteorological data, clinical data, lag variables of disease surveillance, socio-economic data and the data  encoding spatial dependence on dengue transmission. We use generalized Generalized Additive Models (GAMs) to fit the relationships between the predictors and the clinical data of Dengue hemorrhagic fever (DHF) on the basis of the data from 2008 to 2012. Using the data from  2013 to 2015 and a comparative set of prediction models we evaluate the predictive ability of the fitted models according to RMSE and SRMSE, BIC as well as AIC. We also show that for the prediction of dengue outbreaks within a district, the influence of dengue incidences and socio-economic data from the surrounding districts is **statistically significant**, possibly indicating the influence of movement patterns of people and spatial heterogeneity of human activities on the spread of the epidemic.
+
+## Hypothesis {#hypothesis}
+
+$H_1:$ To forecast dengue incidences in a particular district, the influence of the data from past dengue incidences and socio-economic data from its **surrounding districts** is statistically significant.  
+
+$H_2:$ To forecast dengue incidences, a data-driven interpretable, non-parametric time-series forecasting approach (e.g. Generalized Additive Models (GAMs)) is statistically better than parametric modeling approaches (e.g. ARIMA.)
+
+$H_3:$ To forecast dengue incidences, an ensemble forecasting model with Bayesian Network and time-series modeling approach is statistically better than the individual models. 
+

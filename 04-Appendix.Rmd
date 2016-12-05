@@ -1,0 +1,128 @@
+# (APPENDIX) Appendix {-} 
+
+# Software Tools
+
+
+```{r LoadPackagesAgain, message=FALSE}
+
+require(ggplot2) # used in plotting 
+require(reshape)
+require(plotly)
+require(bnlearn) # used for Bayesian Networks
+require(mgcv)    # used for Generalized Additive Modeling 
+require(fpp)
+require(lubridate)
+require(bsts)
+require(dplyr)
+require(CausalImpact)
+require(xtable)
+require(dplyr)
+require(tidyr)
+require(htmlwidgets)
+require(DT)
+```
+
+# Supporting information 
+
+## Cross-correlation between Outcome and Predictors
+
+```{r Cross-Cor, echo=FALSE, results="hide", message=FALSE}
+
+attach(training2008_2012)
+
+lag <- as.integer(c(0:3))
+par(mfrow=c(2,2))
+#ylim=c(0, 1)
+
+
+# dengue 
+short_den <- data.frame(count0, count1, count2, count3)
+cor(count, short_den, method="spearman", use="pairwise.complete.obs")
+plot(lag, as.numeric(cor(count, short_den , method="spearman", use="pairwise.complete.obs")), ylab="Correlation coefficient", xlab="Lag of monthly dengue cases")          
+title(main="Dengue cases vs. Dengue cases")
+
+
+# temp
+short_temp <- data.frame(templ0, templ1, templ2, templ3)
+cor(count, short_temp, method="spearman", use="pairwise.complete.obs")
+plot(lag, as.numeric(cor(count, short_temp, method="spearman", use="pairwise.complete.obs")), ylab="Correlation coefficient", xlab="Lag of monthly temperature")          
+title(main="Dengue cases vs. Temperature")
+
+# rain
+short_rain <- data.frame(rainl0, rainl1, rainl2, rainl3)
+cor(count, short_rain, method="spearman", use="pairwise.complete.obs")
+plot(lag, as.numeric(cor(count, short_rain, method="spearman", use="pairwise.complete.obs")), ylab="Correlation coefficient", xlab="Lag of monthly rainfall")          
+title(main="Dengue cases vs. Rainfall")
+
+
+# with neighboring districts
+
+short_neighbor <- data.frame(surroundingCountVec0, surroundingCountVec1, surroundingCountVec2, surroundingCountVec3)
+cor(count, short_neighbor, method="spearman", use="pairwise.complete.obs")
+plot(lag, as.numeric(cor(count, short_neighbor , method="spearman", use="pairwise.complete.obs")), ylab="Correlation coefficient", xlab="Lag of monthly dengue cases")          
+title(main="Dengue cases vs. Surrounding Dengue cases")
+
+
+detach(training2008_2012)
+
+
+```
+
+
+## Summary of Meteorology Model {#appDM}
+
+```{r Summary-D-M, echo=FALSE, comment=NA}
+summary(mod.DM)
+```
+
+
+## Summary of  Short-term Lag Model {#appDDShort}
+
+```{r Summary-DDShort, echo=FALSE, comment=NA}
+summary(mod.DDShort)
+```
+
+## Summary of Long-term Lag Model {#appDDLong}
+
+```{r Summary-DDLong, echo=FALSE, comment=NA}
+summary(mod.DDLong)
+```
+
+## Summary of Optimal-term Lag Model {#appDDOptimal}
+
+```{r Summary-DDOptimal, echo=FALSE, comment=NA}
+summary(mod.DDOptimal)
+```
+
+## Summary of Meteorology and Optimal-term Lag Model {#appDMD}
+
+```{r Summary-DMD, echo=FALSE, comment=NA}
+summary(mod.DMD)
+```
+
+## Summary of Meteorology, Optimal-term and Short-term Surrounding Lag Model {#appDMDS_Optimal}
+
+```{r DMDS_ShortC, echo=FALSE, comment=NA}
+summary(mod.DMDS_Short)
+```
+
+## Meteorology, Optimal-term and Optimal-term Surrounding Lag Model
+
+```{r Summary_DDOptimal, echo=FALSE, comment=NA}
+summary(mod.DMDS_Optimal)
+```
+
+## Social Data Included {#appDMDSO}
+
+```{r SummaryDMDSO, echo=FALSE, comment=NA}
+summary(mod.DMDSO)
+```
+
+## Initial Analyses Summary
+
+
+
+
+
+
+
