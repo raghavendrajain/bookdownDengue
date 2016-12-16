@@ -1,7 +1,11 @@
-# Exploratory Data Analysis {#exploration}
+<!-- # Exploratory Data Analysis {#exploration} -->
+
+# Materials and Methods {#materials}
+
+## Study Area
 
 
-Bangkok has 50 districts. Our aim is to predict the dengue outbreak in each of its several districts shown in Figure \@ref(fig:bkk-map).  
+Our aim is to predict the dengue outbreak in each of its several districts shown in Figure \@ref(fig:bkk-map).  
 
 ```{r bkk-map, fig.cap= ' The map of Bangkok with enumerated 50 districts (Image Source: [@wikiBKK])', out.width='80%', fig.asp=.75, fig.align='center', echo=FALSE}
 knitr::include_graphics("images/bangkok_district.png")

@@ -219,7 +219,7 @@ colnames(orderedEntireData)[colSums(is.na(orderedEntireData)) > 0]
 ```
 
 
-```{r}
+```{r results="hide", echo=FALSE, include=FALSE}
 
 ## In the dataset, for some of the 50 districts, we don't have the data for DTR and rainfall.
 ## However, since the entire Bangkok have the same DTR and rainfall, we will use that data to replace NA from DTR and Rainfall data. 
